@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://unpkg.com/js-datepicker/dist/datepicker.min.css">
+  <script src="https://unpkg.com/currency.js@2.0.4/dist/currency.min.js"></script>
+  <script src="https://unpkg.com/js-datepicker"></script>
+  <style>
+    table,
+    td,
+    th {
+      border: 2px solid black;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    tr {
+      height: 40px;
+    }
+
+    td {
+      height: 40px;
+      width: 180px;
+      padding: 5px;
+    }
+
+    td:nth-child(2n+0) {
+      text-align: center;
+    }
+
+    input {
+      height: 30px;
+      width: 221px;
+    }
+
+    select,
+    input {
+      border: none;
+      outline: none;
+      text-align: center !important;
+      font-weight: bold;
+    }
+
+    option {
+      text-align: left;
+    }
+
+    .pilihan select {
+      width: 22px;
+      height: 20px;
+      position: absolute;
+      background-color: rgba(240, 248, 255, 0);
+    }
+
+    span {
+      width: 80%;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+  <h1> DATA PENOMORAN</h1>
+  <table>
+    <tr>
+      <td><b>TANGGAL</b></td>
+      <td><input type="text" id="tgl" style="text-align:center"></td>
+    </tr>
+    <tr>
+      <td><b>NAMA PENYEDIA</b></td>
+      <td class="pilihan">
+        <span></span>
+        <select id="listPenyedia">
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td><b>SUB BIDANG</b></td>
+      <td class="pilihan">
+        <span></span>
+        <select id="subbidang">
+          <option></option>
+          <option>ANGGARAN</option>
+          <option>AKUNTANSI</option>
+          <option>KEUANGAN</option>
+          <option>PROGRAM</option>
+          <option>UMUM</option>
+          <option>ASET</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td><b>HARGA</b></td>
+      <td><input id="harga" type="text" style="text-align:right"></td>
+    </tr>
+    <tr>
+      <td><b>JENIS KEGIATAN</b></td>
+      <td class="pilihan">
+        <span></span>
+        <select id="listKegiatan">
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td><b>NODS/NOPES</b></td>
+      <td><input type="text" id="nopes" oninput="this.value = this.value.replace(/[^0-9]/g, '');"></td>
+    </tr>
+    <tr>
+      <td><b>URAIAN KEGIATAN</b></td>
+      <td id="listUraian">
+      </td>
+    </tr>
+    <tr>
+      <td><b>CEK NOMOR YANG TERSEDIA</b></td>
+      <td class="pilihan">
+        <span id="spanTersedia"></span>
+        <select id="noTersedia">
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td class="pilihan">
+        <span style="font-weight: bold;text-align: left;">NOMOR BAPHP/BASTHP</span>
+        <select id="noPenomoran">
+          <option>NOMOR BAPHP/BASTHP</option>
+          <option>NOMOR SPK</option>
+        </select>
+      </td>
+      <td id="listbasthp"></td>
+    </tr>
+  </table>
+  <button id="simpan">SIMPAN</button>
+  <!-- <script src="tes2.js"></script> -->
+  <script src="tes.js"></script>
+  <script>
+
+
+    let keyTgl = Object.keys(mentah2)
+
+    //JSON generator===== JANGAN DIHAPUS
+    // let j = 0;
+    // for (let i = 0; i < keyTgl.length; i++) {
+    //   mentah[keyTgl[i]] = { [1 + j]: "", [2 + j]: "", [3 + j]: "", [4 + j]: "", [5 + j]: "", [6 + j]: "", [7 + j]: "", [8 + j]: "", [9 + j]: "", [10 + j]: "" }
+    //   j = j + 10
+    //   if (i == keyTgl.length - 1) {
+    //     console.log(mentah)
+    //   }
+    // }
+
+    let listUraian = document.getElementById('listUraian');
+    // let listspk = document.getElementById('listspk');
+    let listbasthp = document.getElementById('listbasthp');
+    let noTersedia = document.getElementById('noTersedia');
+    let pilihan = document.getElementsByClassName('pilihan');
+    let noPenomoran = document.getElementById('noPenomoran');
+
+    //klo blm ada database noTersedia, bikinkan!
+    if (!localStorage.getItem('noTersedia')) {
+      localStorage.setItem('noTersedia', JSON.stringify(mentah2));
+    }
+    // tanggal
+    datepicker('#tgl', {
+      customMonths: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+      customDays: ['min', 'sen', 'sel', 'rab', 'kam', 'jum', 'sab'],
+      minDate: new Date(2022, 0, 3),
+      maxDate: new Date(2022, 11, 31),
+      noWeekends: true,
+      formatter: (input, date, instance) => {
+        let tgldigit = date.getDate()
+        if (tgldigit.toString().length == 1) {
+          tgldigit = '0' + tgldigit;
+        }
+        input.value = `${tgldigit} ${instance.currentMonthName} ${instance.currentYear}`
+        autoUraian(listUraian, nopes.value, "Sesuai Nota Dinas/Nota Pesanan Nomor: ")
+        // autoUraian(listspk, noTersedia.value)
+        autoUraian(listbasthp, noTersedia.value)
+
+        let ygSdhAda = JSON.parse(localStorage.getItem('noTersedia'));
+
+        let tglx = date.getDate()
+        let blnx = date.getMonth() + 1
+        let thnx = date.getFullYear()
+
+        if (`${blnx}`.length == 1) {
+          blnx = '0' + blnx
+        }
+
+        if (`${tglx}`.length == 1) {
+          tglx = '0' + tglx
+        }
+        let tglStandar = `${tglx}/${blnx}/${thnx}`
+
+        let keyNoTersedia = Object.keys(ygSdhAda[tglStandar])
+
+        while (noTersedia.childElementCount > 0) {
+          noTersedia.lastElementChild.remove()
+        }
+
+
+        for (let i = 0; i < keyNoTersedia.length; i++) {
+          // console.log(ygSdhAda[tglStandar][keyNoTersedia[i]])
+          if (ygSdhAda[tglStandar][keyNoTersedia[i]] == '') {
+            let opt = document.createElement('option')
+            let tambahNol = keyNoTersedia[i];
+            if (keyNoTersedia[i].length == 1) {
+              tambahNol = '00' + keyNoTersedia[i]
+            } else if (keyNoTersedia[i].length == 2) {
+              tambahNol = '0' + keyNoTersedia[i]
+            }
+
+            opt.innerText = tambahNol;
+            noTersedia.appendChild(opt);
+          }
+        }
+
+
+
+
+
+
+        // console.log()
+      }
+    })
+
+    let nopes = document.getElementById('nopes')
+    let harga = document.getElementById('harga')
+
+    //penyedia
+    let namaPenyedia = ['', 'CV. AGUNG MANDIRI', 'CV. AR PROJECT', 'CV. CAHAYA KAERO', 'CV. CAHAYA MAKMUR', 'CV. DELAPAN SEMBILAN', 'CV. ZSYEL',
+      'CV. ERBE FOOD INDONESIA', 'CV. MILAN UTAMA', 'CV. MITRA MEGA MULIA', 'CV. RAIHAN', 'CV. RIYANTI NUSANTARA', 'PT. MURFA SURYA MAHADHIKA',
+      'PT. SINER', 'RESTO CENDANA', 'CV. BINTANG 85 MEDIA', 'CV. ALMIRA MANDIRI', 'CV. IDE KREASI PARAKITA'];
+
+    let listPenyedia = document.getElementById('listPenyedia');
+
+    namaPenyedia.forEach((item) => {
+      let optionPenyedia = document.createElement('option');
+      optionPenyedia.innerText = item;
+      listPenyedia.appendChild(optionPenyedia)
+    })
+
+    //kegiatan
+    let namaKegiatan = ['', 'BELANJA ATK', 'BELANJA MODAL ATAU CETAK', 'BELANJA PEMELIHARAAN', 'BELANJA MAKAN MINUM RAPAT',
+      'BELANJA MAKAN MINUM TAMU', 'BELANJA SERVIS DAN SUKU CADANG', 'BELANJA KEBERSIHAN', 'BBM', 'KEUANGAN'];
+    let listKegiatan = document.getElementById('listKegiatan');
+
+    namaKegiatan.forEach((item) => {
+      let optionKegiatan = document.createElement('option');
+      optionKegiatan.innerText = item;
+      listKegiatan.appendChild(optionKegiatan)
+    })
+
+    listKegiatan.addEventListener('change', () => {
+      autoUraian(listUraian, nopes.value, "Sesuai Nota Dinas/Nota Pesanan Nomor: ")
+      // autoUraian(listspk, noTersedia.value)
+      autoUraian(listbasthp, noTersedia.value)
+    })
+
+    //harga
+    harga.addEventListener('change', (e) => {
+      let hargaoke = currency(e.target.value, { separator: '.', decimal: ',', symbol: 'Rp. ' }).format();
+      harga.value = hargaoke;
+    })
+
+    //nopes
+    nopes.addEventListener('change', (e) => {
+      if (nopes.value.toString().length == 1) {
+        nopes.value = '00' + nopes.value
+      } else if (nopes.value.toString().length == 2) {
+        nopes.value = '0' + nopes.value
+      }
+
+      autoUraian(listUraian, nopes.value, "Sesuai Nota Dinas/Nota Pesanan Nomor: ")
+    })
+
+    //cek nomor tersedia
+
+    noTersedia.addEventListener('click', () => {
+      // autoUraian(listspk, noTersedia.value)
+      autoUraian(listbasthp, noTersedia.value)
+    })
+
+    //fungsi bikin nomor surat otomatis
+    let zulBln = {
+      'Januari': 'I',
+      'Februari': 'II',
+      'Maret': 'III',
+      'April': 'IV',
+      'Mei': 'V',
+      'Juni': 'VI',
+      'Juli': 'VII',
+      'Agustus': 'VIII',
+      'September': 'IX',
+      'Oktober': 'X',
+      'November': 'XI',
+      'Desember': 'XII'
+    }
+
+    let arrBln = Object.keys(zulBln);
+
+    function autoUraian(elTarget, noSurat, txt = "") {
+      let dataTgl = tgl.value
+      let blnx = dataTgl.match(/[^0-9\s]+/)[0];
+      let thnx = dataTgl.match(/...\d$/)[0];
+      let nomorUraian = {
+        'BELANJA ATK': '021',
+        'BELANJA MODAL ATAU CETAK': '027',
+        'BELANJA PEMELIHARAAN': '029',
+        'BELANJA MAKAN MINUM RAPAT': '841.7',
+
+        'BELANJA MAKAN MINUM TAMU': '841.7',
+        'BELANJA SERVIS DAN SUKU CADANG': '024',
+        'BELANJA KEBERSIHAN': '018',
+        'BBM': '541',
+        'KEUANGAN': '900'
+      };
+
+      let noKegiatan = nomorUraian[listKegiatan.value];
+      if (noPenomoran.value == 'NOMOR SPK' && elTarget.id != 'listUraian') {
+        noKegiatan = noSurat;
+        noSurat = "SPK";
+      }
+
+      elTarget.innerText = `${txt}${noKegiatan}/${noSurat}/BKAD/${zulBln[blnx]}/${thnx}`
+    }
+
+    // copy isi select terpilih ke span
+    for (let i = 0; i < pilihan.length; i++) {
+      pilihan[i].children[1].onclick = (event) => {
+        pilihan[i].children[0].innerText = event.target.value
+      }
+    }
+
+    noPenomoran.addEventListener('change', (event) => {
+      autoUraian(listbasthp, noTersedia.value)
+    })
+
+    let tgl = document.getElementById('tgl')
+    let subbidang = document.getElementById('subbidang')
+
+    // fungsi simpan ke localstorage
+    async function dbNomor(dbTgl, dbNamaPenyedia, dbSubBidang, dbHarga, dbJnsKegiatan, dbNodis, dbUraianKeg, dbNoSpkPhp) {
+      let spanTersedia = document.getElementById('spanTersedia')
+      let isiDb = {
+        "tanggal": dbTgl, "nama penyedia": dbNamaPenyedia, "subbidang": dbSubBidang, "harga": dbHarga, "jenis kegiatan": dbJnsKegiatan, "nodis": dbNodis, "uraian kegiatan": dbUraianKeg, "nomor spk/ bphp": dbNoSpkPhp
+      }
+
+      let ygSdhAda = JSON.parse(localStorage.getItem('noTersedia'));
+
+      let tglx = ambilTgl('tglx')
+      let blnx = ambilTgl('blnx')
+      let thnx = ambilTgl('thnx')
+
+      if (`${blnx}`.length == 1) {
+        blnx = '0' + blnx
+      }
+
+      if (`${tglx}`.length == 1) {
+        tglx = '0' + tglx
+      }
+      let tglStandar = `${tglx}/${blnx}/${thnx}`
+
+      ygSdhAda[tglStandar][spanTersedia.innerText] = isiDb
+
+      // let tes = { tanggalx }
+      // console.log(ygSdhAda)
+
+      localStorage.setItem('noTersedia', JSON.stringify(ygSdhAda))
+
+      return ygSdhAda
+    }
+
+    //tombol simpan
+    let simpan = document.getElementById('simpan')
+    simpan.addEventListener('click', () => {
+      dbNomor(tgl.value, listPenyedia.value, subbidang.value, harga.value, listKegiatan.value, nopes.value, listUraian.innerText, listbasthp.innerText).then((res) => {
+        alert("data tersimpan")
+      })
+    })
+
+    function ambilTgl(parm) {
+      var tgl2 = tgl.value
+      var tglx = tgl2.match(/^\d+/)[0]
+      var blnx = tgl2.match(/[^0-9\s]+/)[0];
+      var thnx = tgl2.match(/...\d$/)[0];
+
+      if (parm == "tglx") {
+        return tglx
+      } else if (parm == "blnx") {
+        let keybln = Object.keys(zulBln)
+        return keybln.indexOf(blnx) + 1
+      } else if (parm == 'thnx') {
+        return thnx
+      }
+
+      return tgl2;
+    }
+  </script>
+</body>
+
+</html>
